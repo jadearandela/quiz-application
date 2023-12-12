@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Application</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            background-image: url(km.jpg);
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #quiz-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(15, 143, 199, 0.718);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            background-image: url(qw.jpg);
+            background-size: cover;
+            font-family: cursive;
+            color: rgb(240, 244, 5);
+            text-align: left;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option {
+            margin-bottom: 8px;
+        }
+
+        .next-btn {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+
+        .timer {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .results {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        #startQuizBtn {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .correct-answer {
+    border: 2px solid green;
+    padding: 5px; /* Bawasan ang padding para maging mas maliit ang box */
+    margin-top: 5px; /* Bawasan ang margin-top para maging mas malapit sa tanong */
+    font-weight: bold;
+    background-color: #fff;
+}
+
+.incorrect-answer {
+    color: red;
+    font-weight: bold;
+}
+    </style>
+</head>
+
+<body>
+    <div id="quiz-container">
+        <button id="startQuizBtn">Start Quiz</button>
+        <div id="quiz" class="quiz" style="display: none;">
+            <!-- Quiz content goes here -->
+        </div>
+        <button id="nextBtn" class="next-btn" style="display: none;">Next</button>
+        <div id="results" class="results" style="display: none;"></div>
+    </div>
+    <script>
+        const questions = [
+            {
+                question: 'What are the two highest-grossing films of all time?',
+                options: ['Avengers: End Game and Star Wars: Episode VII – The Force Awakens', 'Avatar and Avengers: End Game', 'Furious 7 and Avatar'],
+                correctAnswer: 'Avengers: End Game and Star Wars: Episode VII – The Force Awakens'
+            },
+            {
+                question: 'Which programming language is used for web development?',
+                options: ['Java', 'Python', 'JavaScript'],
+                correctAnswer: 'JavaScript'
+            },
+            {
+                question: 'What is the largest planet in our solar system?',
+                options: ['Uranus', 'Jupiter', 'Venus'],
+                correctAnswer: 'Jupiter'
+            },
+            {
+                question: 'Which company was the first to reach 1 trillion dollars?',
+                options: ['Microsoft', 'Apple', 'Google'],
+                correctAnswer: 'Apple'
+            },
+            {
+                question: 'Which ocean is the largest?',
+                options: ['Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean'],
+                correctAnswer: 'Pacific Ocean'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+
+        const quizContainer = document.getElementById('quiz');
+        const startQuizBtn = document.getElementById('startQuizBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resultsContainer = document.getElementById('results');
+
+        startQuizBtn.addEventListener('click', startQuiz);
+
+        function startQuiz() {
+            startQuizBtn.style.display = 'none';
+            quizContainer.style.display = 'block';
+            nextBtn.style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            clearInterval(timer);
+
+            const currentQuestion = questions[currentQuestionIndex];
+            const optionsHtml = currentQuestion.options.map(option =>
+                `<div class="option"><input type="radio" name="answer" value="${option}">${option}</div>`
+            ).join('');
+
+            quizContainer.innerHTML = `
+                <div class="question">${currentQuestion.question}</div>
+                <div class="options">${optionsHtml}</div>
+                <div class="timer" id="timer">Time left: 15s</div>
+            `;
+
+            let timeLeft = 15;
+            const timerContainer = document.getElementById('timer');
+            timerContainer.innerText = `Time left: ${timeLeft}s`;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerContainer.innerText = `Time left: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showCorrectAnswer(currentQuestion.correctAnswer);
+                }
+            }, 1000);
+
+            nextBtn.onclick = function () {
+                clearInterval(timer);
+                checkAnswer();
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            };
+        }
+
+        function showResults() {
+            resultsContainer.innerHTML = `Your score: ${score} out of ${questions.length}`;
+            resultsContainer.style.display = 'block';
+            nextBtn.style.display = 'none';
+            showAllCorrectAnswers();
+        }
+
+        function checkAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+
+            if (selectedOption) {
+                const userAnswer = selectedOption.value;
+                const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+
+                if (userAnswer === correctAnswer) {
+                    score++;
+                } else {
+                    showCorrectAnswer(correctAnswer);
+                }
+            }
+        }
+
+        function showCorrectAnswer(correctAnswer) {
+            quizContainer.innerHTML += `<div class="incorrect-answer">Incorrect! Correct Answer: ${correctAnswer}</div>`;
+        }
+
+        function showAllCorrectAnswers() {
+            quizContainer.innerHTML = '<h2>Correct Answers:</h2>';
+            questions.forEach((question, index) => {
+                quizContainer.innerHTML += `<div class="question">${index + 1}. ${question.correctAnswer}</div>`;
+            });
+        }
+    </script>
+</body>
+
+</html>
